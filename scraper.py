@@ -2,36 +2,37 @@ import os
 import time
 import requests                         ##to get requests from a particular URL
 from selenium import webdriver          ##selenium with python is used to carry out automated test cases for browsers or web applications. You can easily use it to simulate tests such as tapping on a button, entering content to the structures, skimming the entire site, etc.
-                                        ##webdriver class of selenium will be used to hit the web browser using that web browser specific web driver, like to hit google chrome we will use the cromedriver that we have installed earlier{that we have out in the current working directory}
+                                        ##webdriver class of selenium will be used to hit the web browser using that web browser specific web driver, like to hit google chrome we will use the cromedriver that we have installed earlier{that we have placed out in the current working directory}
 
-def fetch_image_urls(query: str, max_links_to_fetch: int, wd: webdriver, sleep_between_interactions: int = 1):
+def fetch_image_urls(query: str, max_links_to_fetch: int, wd: webdriver, sleep_between_interactions: int = 2):       ##provided input variables with datatyping,,,,,,,and "wd" is an instance of webdriver class{using datatyping this could be done}
+    ##function that will be called later to scroll the web page from top to the end{jha tak ki scroll kia ja sakta hai i.e., jab tak li load more button na aa jae }
     def scroll_to_end(wd):
         wd.execute_script("window.scrollTo(0, document.body.scrollHeight);")      ###execute_script method of wendriver is used to run a javascript code on the current web page. The javascript code is "window.scrollTo(0,document.body.scrollHeight)" which scrolls to the bottom of the page. The execute_script method can also return a value from the javascript code if it has a return statement.... it was used in a python script because the script was using webdriver to automate some web browsing tasks. Sometimes, it is easier or necessary to use JavaScript code to perform some actions on a web page that webdriver cannot do by itself. For example, scrolling to a specific element or clicking a hidden button. In those cases, execute_script can be useful to run JavaScript code from Python.
         time.sleep(sleep_between_interactions)
 
         # build the google query
 
-    search_url = "https://www.google.com/search?safe=off&site=&tbm=isch&source=hp&q={q}&oq={q}&gs_l=img"    ###this is a url that will search for images of 'q'{the placeholder for the search term}
+    search_url = "https://www.google.com/search?safe=off&site=&tbm=isch&source=hp&q={q}&oq={q}&gs_l=img"    ###this is a common url that will search for images of 'q'{the placeholder for the search query/ search term,,,,,,,,,basically whatever serach result on google chrome for any king images, the url will be same except the q term will be the serach term whose images haev been searched}
 
     # load the page
-    wd.get(search_url.format(q=query))      ##it is the same format that is used with a string to format the placeholder in the string
+    wd.get(search_url.format(q=query))      ##it is the same format that is used with a string to format the placeholder in the string, so here using format we foramtted the "q" placeholder and assigned it "query" varable, which will be the search term that will be used in the search url to get images w.r.t. the search term
                                             ##the above code will load the very first page, once its done, the below mentioned will be created
-    image_urls = set()                      ##this variable will hold on to the urls of the images, and we want to have all distinct urls hence we formed set type of variable
+    image_urls = set()                      ##this variable will hold on to distinct urls{as variabel is of type set} of the images
     image_count = 0
     results_start = 0
     while image_count < max_links_to_fetch:
         scroll_to_end(wd)
 
         # get all image thumbnail results
-        thumbnail_results = wd.find_elements_by_css_selector("img.Q4LuWd")  ##"find_elements_by_css_selector()" method, which is a part of Selenium Python, a web automation framework. This method returns a list of elements that match a given CSS selector. A CSS selector is a way of identifying elements on a web page based on their style properties, in this line, css selector is "img.Q4LuWd" which means it will look for all image tag {<img>} elements that has a class name of "Q4LuWd" {this can be seen by using the "inspect" feature of the webpage}. the variable "thumnail_results" will store this list off elements.
+        thumbnail_results = wd.find_elements_by_css_selector("img.Q4LuWd")  ##"find_elements_by_css_selector()" method, which is a part of Selenium Python, a web automation framework. This method returns a list of elements that match a given CSS selector. A CSS selector is an attribute which is used as a locator for finding elements on a web page based on their style properties, in this line, css selector is "img.Q4LuWd" which means it will look for all image tag {<img>} elements w.r.t. thumbnails of the images{which we found by hovering over the thumbnials uisng inspect feature of the browser}that has a jsname as "Q4LuWd" {this can be seen by using the "inspect" feature of the webpage, and note it is same for all the images's thumbnails on google chrome}. the variable "thumnail_results" will store the list of all the elements w.r.t. thumbnails of the images found w.r.t. the search term
         number_results = len(thumbnail_results)
 
         print(f"Found: {number_results} search results. Extracting links from {results_start}:{number_results}")
 
         for img in thumbnail_results[results_start:number_results]:
-            # try to click on every thumbnail such that we can get the real image behind it,,,like we see on the windows collective result of image's thumnails, then if want to open the image we click on it to see it in full real size
+            #iterate over every thumnail element found one by one
             try:
-                img.click()
+                img.click()                                                       ##clicking on one of the thumnail will open a bigger version of it on teh right side, which we will locate using webdriver uisng css_selector as locator and for that we will use common class name{which we get by hovering over the image } in case of google chrome for this version of image {that opens on teh right side}
                 time.sleep(sleep_between_interactions)
             except Exception:
                 continue
@@ -39,25 +40,23 @@ def fetch_image_urls(query: str, max_links_to_fetch: int, wd: webdriver, sleep_b
             # extract image urls
             actual_images = wd.find_elements_by_css_selector('img.n3VNCb')
             for actual_image in actual_images:
-                if actual_image.get_attribute('src') and 'http' in actual_image.get_attribute('src'):     ##{a line of code uisng selenium mpython}, it checks if an element "actual_image" has an attribute called "src" and if that attribute contains th estring "http". if both conditions are true, then code will execute the next statement
-                    image_urls.add(actual_image.get_attribute('src'))
+                if actual_image.get_attribute('src') and 'http' in actual_image.get_attribute('src'):     ##{a line of code uisng selenium mpython}, it checks if an element "actual_image" has an attribute called "src" and if that attribute contains the string "http". if both conditions are true, then code will execute the next statement
+                    image_urls.add(actual_image.get_attribute('src'))                                     ##this will add  the "src" attribute of the "actual_iamge" element, which is basically a url of the image
 
             image_count = len(image_urls)
 
             if len(image_urls) >= max_links_to_fetch:
                 print(f"Found: {len(image_urls)} image links, done!")
                 break
-        else:                                                                            ###this else statemet runs if the whole for loop is exhausted but still the break{that we have assigned when we get the image urls equals or greater than the images we need} has not occured, if the break would have occured then this else statement wouldn't have executed, it would have simply returend the image_urls
+        else:                                                                                             ##if the length of image_urls set is greater than the max_links_to_fetch then the for loop will break and else statement also will not run and simply as the condition of while loop{the outer loop} is no more true, the while loop will also end and teh function fetch_image_urls will return the image_urls set. BUT if the length of image_urls is still less than max_links_to_fetch then and the whole for loop is exhausted whiout any break then the else statement will run{which basically will find the element using css_selector ".mye4qd", which is genrally used for an element, which is a button to load more, if the load more button's element found then using webdriver will execute a script which perform a function of clicking on the button}, then the code floe will check the while loop condition which is obviously still True, then whole while loop willl run again but this time on the extended web page which would have opened after clicking on teh load more button
             print("Found:", len(image_urls), "image links, looking for more ...")
             time.sleep(30)
             return
             load_more_button = wd.find_elements_by_css_selector(".mye4qd")
             if load_more_button:
                 wd.execute_script("document.querySelector('.mye4qd').click();")
-
-        # move the result startpoint further down
-        results_start = len(thumbnail_results)
-
+            else:
+                print("Could not find 'Load More' button")
     return image_urls
 
 
@@ -101,7 +100,7 @@ def search_and_download(search_term: str, driver_path: str, target_path='./image
 
 
 DRIVER_PATH = r'chromedriver.exe'       ##mentioned the path of the chrome driver{just mentioned the name because it is present in my current working directry}
-search_term = 'sudhanshu ineuron'
+search_term = 'car'
 # num of images you can pass it from here  by default it's 10 if you are not passing
 #number_images = 50
 search_and_download(search_term=search_term, driver_path=DRIVER_PATH, number_images=10)
